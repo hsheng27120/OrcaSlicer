@@ -1,2 +1,2 @@
-#include "slic3r/GUI/Gui.hpp"
+// PR trigger probe: trivial widgets change (no GUI dependency)
 #pragma once
