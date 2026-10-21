@@ -1,0 +1,40 @@
+# CI gates on the internal GitLab. The only runner ("45-docker-shared") has
+# run_untagged=false -> every job MUST carry tags: [ shared ].
+# GH Actions variants live in .github/workflows/ for a future GitHub mirror.
+stages:
+  - test
+
+widgets-deps-check:
+  stage: test
+  image: python:3.12-slim
+  tags: [ shared ]
+  script:
+    - python scripts/check_widgets_deps.py
+
+engine-boundary-gate:
+  image: python:3.12-slim
+  # instance's only runner ("45-docker-shared") has run_untagged=false
+  tags: [ shared ]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - 'src/libslic3r/**/*'
+        - 'src/app_common/**/*'
+        - 'src/common_func/**/*'
+        - 'src/mqtt/**/*'
+        - 'scripts/engine_boundary_config.json'
+        - 'scripts/check_engine_boundary.py'
+        - '.gitlab-ci.yml'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH'
+      changes:
+        - 'src/libslic3r/**/*'
+        - 'src/app_common/**/*'
+        - 'src/common_func/**/*'
+        - 'src/mqtt/**/*'
+        - 'scripts/engine_boundary_config.json'
+        - 'scripts/check_engine_boundary.py'
+        - '.gitlab-ci.yml'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+  script:
+    - python scripts/check_engine_boundary.py

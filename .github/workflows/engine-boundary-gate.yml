@@ -1,0 +1,41 @@
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/libslic3r/**'
+      - 'src/app_common/**'
+      - 'src/common_func/**'
+      - 'src/mqtt/**'
+      - 'scripts/engine_boundary_config.json'
+      - 'scripts/check_engine_boundary.py'
+      - '.github/workflows/engine-boundary-gate.yml'
+  pull_request:
+    paths:
+      - 'src/libslic3r/**'
+      - 'src/app_common/**'
+      - 'src/common_func/**'
+      - 'src/mqtt/**'
+      - 'scripts/engine_boundary_config.json'
+      - 'scripts/check_engine_boundary.py'
+      - '.github/workflows/engine-boundary-gate.yml'
+  workflow_dispatch: # allows for manual dispatch
+
+name: "Engine boundary gate"
+permissions: {}
+
+jobs:
+  boundary-gate:
+    name: No engine->GUI reverse dependency (include + link)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      # KR1-2: enforcing from day one (baseline is 0); emergency rollback =
+      # append --warning here, one-line change (see design.md D4).
+      - name: Check engine-layer boundary (include + link)
+        run: python scripts/check_engine_boundary.py

@@ -1,0 +1,5 @@
+# Config-key gate allowlist (scripts/check_config_key_literals.py)
+# One repo-relative glob per line, e.g. src/slic3r/GUI/SomeFile.cpp
+# Listed files may add raw config-key literals; every change to this list
+# is visible in the PR diff and requires review.
+# Prefer fixing with cfg::<key> constants over extending this list.

@@ -1,0 +1,50 @@
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'scripts/generate_config_keys.py'
+      - 'scripts/check_config_key_literals.py'
+      - 'scripts/config_key_gate_allowlist.txt'
+      - '.github/workflows/config-key-gate.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/generate_config_keys.py'
+      - 'scripts/check_config_key_literals.py'
+      - 'scripts/config_key_gate_allowlist.txt'
+      - '.github/workflows/config-key-gate.yml'
+  workflow_dispatch: # allows for manual dispatch
+
+name: "Config key gate"
+permissions: {}
+
+jobs:
+  keys-sync:
+    name: ConfigKeys.hpp sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Verify generated constants are in sync with PrintConfig.cpp
+        run: python scripts/generate_config_keys.py --check
+
+  raw-key-gate:
+    name: No new raw config-key literals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history: the gate diffs against the base branch
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      # KR4 task 3.2: warning mode for a one-week calibration window
+      # (task 3.3: flip to enforcing by removing the --warning flag below).
+      - name: Scan added lines for raw key literals
+        run: python scripts/check_config_key_literals.py --base "origin/${{ github.base_ref || 'main' }}" --warning
